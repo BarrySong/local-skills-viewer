@@ -2,12 +2,6 @@
 
 这是一个可转发给其他 AI agent 的方法论 Skill。下载或安装后，让 Codex、Claude Code、OpenClaw、ccswitch 或其他支持本地技能/规则文件的 agent 读取 `skill/SKILL.md`，它就能按文档在用户自己的电脑上生成“本地 Skills 查看器”。
 
-## 一行安装
-
-```bash
-npx skills add https://github.com/BarrySong/local-skills-viewer
-```
-
 ## 效果预览
 
 总览页面：
