@@ -138,6 +138,8 @@ Source labels should come from detected root ownership, not from fixed text. Exa
 
 The HTML viewer must work by directly opening the file in a browser.
 
+The default goal is visual and functional parity with the reference viewer. Do not redesign it into a landing page, SaaS dashboard, docs site, table app, or generic template unless the user explicitly asks for a different style.
+
 Required capabilities:
 
 - Title: `本地 Skills 查看器` or a user-approved equivalent.
@@ -165,13 +167,264 @@ Required capabilities:
 - No separate table/card toggle unless the user asks for it.
 - No sort control unless the user asks for it.
 
-Design guidance:
+## Reference UI Contract
+
+Build the generated HTML with this exact product shape.
+
+### Page Structure
+
+Use one single-page workbench:
+
+```text
+main.page
+├── section.topbar
+│   ├── eyebrow: 本地 AI 工具 Skills 速查
+│   ├── h1: 本地 Skills 查看器
+│   ├── subhead explaining Codex / Claude Code / ccswitch / plugins / custom skills
+│   └── generation time + update instruction
+├── section.stats
+│   ├── 去重技能
+│   ├── 技能文件来源
+│   ├── 中文分类
+│   └── 多来源重复技能
+├── section.workbench
+│   ├── aside.panel.sidebar
+│   │   ├── search input
+│   │   ├── 中文分类 button list
+│   │   └── 来源分布 bars
+│   └── section.panel.main
+│       ├── result count
+│       ├── source filter select
+│       └── card grid
+└── div#detailModal
+    └── modal panel with title, meta chips, official usage, explanation, trigger, original description, source paths
+```
+
+Do not include:
+
+- marketing hero sections
+- table/card view toggle
+- sort dropdown
+- fake refresh buttons inside the static HTML
+- nested cards or decorative background blobs
+
+### Visual Design Tokens
+
+Use this visual language:
+
+- Warm paper background with subtle green transition: cream / parchment page, not pure white.
+- Ink color: deep blue-green.
+- Accent color: aqua / teal chips and active filters.
+- Secondary accent: earthy brown for hints and section labels.
+- Cards and panels: off-white surface, 1px warm beige border, 8px radius or a close equivalent.
+- Shadows: very subtle; avoid glossy SaaS gradients.
+- Typography:
+  - Display heading: Chinese serif or system serif fallback.
+  - Body: system sans with Chinese support.
+  - Skill names and paths: monospace.
+- Layout rhythm:
+  - Generous page padding on desktop.
+  - Four stat cards in one row on desktop.
+  - Left sidebar and right content panel in the main workbench.
+  - Two-column skill card grid on desktop.
+  - Single-column stacked layout on mobile.
+
+Recommended token names if generating CSS:
+
+```css
+--font-display
+--font-body
+--font-outlier
+--color-ink
+--color-muted
+--color-page
+--color-panel
+--color-line
+--color-accent
+--color-accent-2
+--color-accent-soft
+--radius
+--space-*
+```
+
+### Header Behavior
+
+Header content should match the reference intent:
+
+- Eyebrow: `本地 AI 工具 Skills 速查`
+- Main title: `本地 Skills 查看器`
+- Subhead should explain that the page summarizes visible Codex, Claude Code, ccswitch, plugin, and custom skills into Chinese purpose, category, source, and trigger/use scenarios.
+- Right side should show:
+  - `生成时间：YYYY-MM-DD HH:mm:ss`
+  - update instruction such as `双击更新本地Skills查看器.command`
+  - short note: after adding or editing skills, rerun the update script and the generation time will refresh.
+
+If the user's OS is not macOS, change only the update entrypoint wording. Keep the header layout and meaning.
+
+### Sidebar Behavior
+
+Sidebar must include:
+
+- Search label: `搜索技能、中文用途、路径`
+- Search placeholder similar to `例如：飞书、PPT、dashboard、hallmark`
+- Chinese category list with:
+  - `全部`
+  - category count on the right
+  - active category highlighted with aqua background
+- Source distribution bars:
+  - source label on left
+  - count on right
+  - muted track with dark green fill
+
+Sidebar should remain visually separate from the content area as a `panel`, not a floating marketing card.
+
+### Main Content Behavior
+
+Main content must include:
+
+- Result count text: `当前显示 X / Y 个技能`
+- Source filter select:
+  - default option: `全部来源`
+  - options from detected source labels
+- Empty state: `没有找到匹配的技能。换个关键词或分类试试。`
+- Skill cards in a two-column grid on desktop.
+
+### Skill Card Contract
+
+Each skill card should be compact and clickable.
+
+Card content order:
+
+1. Top row:
+   - skill name in monospace-like bold text
+   - category chip on the right
+2. Chinese-facing summary only.
+3. Source shown as one or more compact source pills.
+4. Hint: `点击查看官方用法和完整路径`
+
+Do not show the raw English description on the card unless no Chinese summary can be produced. Put long text in the modal.
+
+Cards must support:
+
+- mouse click to open modal
+- keyboard focus
+- Enter/Space to open modal
+- visible hover/focus state
+
+### Detail Modal Contract
+
+The detail modal is the main long-form reading surface.
+
+Modal requirements:
+
+- Full-screen dim overlay.
+- Centered panel with max width around 920px.
+- Modal panel max height around 88vh with internal scrolling.
+- Header:
+  - skill name
+  - category pill
+  - source type pills only
+  - close button `×`
+- Do not show `来源数：1` or source count chips in the modal header.
+- Body sections in this order:
+  1. `中文说明`
+  2. `你可以这样说`
+  3. `官方用法`
+  4. `触发说明`
+  5. `英文原描述`
+  6. `完整文件路径`
+
+Official usage presentation:
+
+- Use a pale green official-usage block.
+- Show a title row with left label `官方用法` and right original heading such as `How to use this skill`.
+- If usage is a table, render each row as command + meaning.
+- Command column should use monospace.
+- Meaning column should preserve enough text to understand the usage.
+
+Modal interactions:
+
+- Click close button to close.
+- Click overlay outside the panel to close.
+- Escape key closes.
+- Opening modal should focus the close button.
+- Closing modal should restore normal page state.
+
+### Search And Filter Contract
+
+Search should match against:
+
+- skill name
+- Chinese summary
+- Chinese detail
+- Chinese example
+- English description
+- category
+- source labels
+- source paths
+
+Filtering behavior:
+
+- Category filter and source filter combine with search.
+- Category `全部` resets category only.
+- Source `全部来源` resets source only.
+- Result count updates immediately.
+- Cards re-render immediately.
+
+Sort behavior:
+
+- Do not expose a sort UI.
+- Internally sort by category first, then skill name.
+
+### Responsive Contract
+
+Desktop:
+
+- Page max width around 1360px.
+- Stats in four columns.
+- Workbench as sidebar + main content.
+- Cards in two columns.
+
+Mobile:
+
+- Header stacks vertically.
+- Stats become two columns.
+- Workbench becomes one column.
+- Cards become one column.
+- Modal uses smaller padding and full available width.
+- Long paths and commands wrap without horizontal scrolling.
+
+### Content Copy Contract
+
+Use Chinese-facing UI text by default. Preserve these labels unless the user asks for another language:
+
+- `本地 AI 工具 Skills 速查`
+- `本地 Skills 查看器`
+- `去重技能`
+- `技能文件来源`
+- `中文分类`
+- `多来源重复技能`
+- `搜索技能、中文用途、路径`
+- `中文分类`
+- `来源分布`
+- `当前显示 X / Y 个技能`
+- `全部来源`
+- `点击查看官方用法和完整路径`
+- `中文说明`
+- `你可以这样说`
+- `官方用法`
+- `触发说明`
+- `英文原描述`
+- `完整文件路径`
+
+## Design Guidance
 
 - Keep cards compact; put long usage content in the modal.
 - Use restrained colors and clear spacing.
 - Avoid decorative landing-page layouts; this is a workbench tool.
 - Avoid nested cards.
 - Ensure long paths wrap cleanly on mobile.
+- The generated page should look like a polished local utility, not a marketing website.
 
 ## Update Entry Point
 
@@ -229,15 +482,26 @@ Before finishing, verify:
 - The target folder contains only the expected project files.
 - Running the update script regenerates `本地Skills查看器.html`.
 - Generation time changes after rerun.
+- The generated page visually matches the reference workbench structure: topbar, four stats, left sidebar, right card grid, and modal.
+- The color palette matches the reference: warm paper background, off-white panels, aqua chips, deep blue-green ink, warm beige borders.
+- Desktop layout uses four stat cards, sidebar + main content, and two-column skill cards.
+- Mobile layout stacks cleanly without overlapping text.
 - Search works for skill name, Chinese text, English text, source, and path.
 - Category filter works.
 - Source filter works.
+- Category and source filters combine correctly with search.
 - Detail modal opens and closes.
+- Detail modal closes via close button, overlay click, and Escape key.
+- Skill cards open via mouse click and keyboard Enter/Space.
 - Official usage appears when a skill has a matching section.
+- Official usage appears in a pale green block with command + meaning rows when table data exists.
 - Skills without frontmatter still appear with sensible fallback text.
 - Duplicate skill names show multiple source paths instead of duplicated cards.
+- Cards show Chinese summary only, source pills, and the hint `点击查看官方用法和完整路径`.
+- Modal body uses the required section order: Chinese explanation, example prompt, official usage, trigger, English description, file paths.
 - No absolute path from the original author machine is hardcoded.
 - No obsolete duplicate HTML output is generated unless requested.
+- There is no table/card toggle, no sort dropdown, and no fake in-browser refresh button.
 
 ## Common Mistakes To Avoid
 
