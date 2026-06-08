@@ -304,6 +304,13 @@ Card content order:
 
 Do not show the raw English description on the card unless no Chinese summary can be produced. Put long text in the modal.
 
+Card summary generation:
+
+- Generate the Chinese card summary from that specific skill's `name`, `description`, and official usage when available.
+- Do not use the category-level fallback as the first choice.
+- Skills in the same category must not all receive the same Chinese summary unless their source descriptions are genuinely identical.
+- Category-level wording is only a last-resort fallback for missing or unusable descriptions.
+
 Cards must support:
 
 - mouse click to open modal
@@ -498,6 +505,7 @@ Before finishing, verify:
 - Skills without frontmatter still appear with sensible fallback text.
 - Duplicate skill names show multiple source paths instead of duplicated cards.
 - Cards show Chinese summary only, source pills, and the hint `点击查看官方用法和完整路径`.
+- Cards in the same category have distinct Chinese summaries when their source descriptions differ.
 - Modal body uses the required section order: Chinese explanation, example prompt, official usage, trigger, English description, file paths.
 - No absolute path from the original author machine is hardcoded.
 - No obsolete duplicate HTML output is generated unless requested.
